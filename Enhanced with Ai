@@ -1,0 +1,208 @@
+import java.util.InputMismatchException;
+import java.util.Scanner;
+
+// Capitalized class names to adhere to standard Java naming conventions
+abstract class Person {
+    private final String name;
+
+    public Person(String name) {
+        this.name = name;
+    }
+
+    public void showInfo() {
+        System.out.println(" Name : " + name);
+    }
+
+    public String getName() {
+        return name;
+    }
+}
+
+class Patient extends Person {
+    private final int age;
+
+    public Patient(String name, int age) {
+        super(name);
+        this.age = age;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    @Override
+    public void showInfo() {
+        System.out.println(" [Patient] Name: " + getName() + " | Age: " + age);
+    }
+}
+
+class Doctor extends Person {
+    private final String specialization;
+
+    public Doctor(String name, String specialization) {
+        super(name);
+        this.specialization = specialization;
+    }
+
+    public String getSpecialization() {
+        return specialization;
+    }
+
+    @Override
+    public void showInfo() {
+        System.out.println(" [Doctor] Dr. " + getName() + " | Specialization: " + specialization);
+    }
+}
+
+class Appointment {
+    private final String dateTime;
+    private final double fee;
+
+    public Appointment(String dateTime, double fee) {
+        this.dateTime = dateTime;
+        this.fee = fee;
+    }
+
+    public String getDateTime() { return dateTime; }
+    public double getFee() { return fee; }
+
+    public double getServiceCharge() {
+        return fee * 0.10;
+    }
+
+    public double getTotal() {
+        return fee + getServiceCharge();
+    }
+}
+
+public class ClinicBilling {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        Patient patient = null;
+        Doctor doctor = null;
+        Appointment appointment = null;
+
+        System.out.println("=== Welcome to the Advanced Clinic System ===");
+
+        while (true) {
+            System.out.println("\n--- RECEPTIONIST DESK ---");
+            System.out.println("1. Register Patient");
+            System.out.println("2. Assign Doctor");
+            System.out.println("3. Book Appointment & Fee");
+            System.out.println("4. Print Final Summary Invoice");
+            System.out.println("5. Cancel Appointment");
+            System.out.println("6. Exit System");
+            System.out.print("Select an option (1-6): ");
+
+            int choice;
+            try {
+                choice = sc.nextInt();
+                sc.nextLine(); // Clear the buffer
+            } catch (InputMismatchException e) {
+                System.out.println("Error: Please enter a valid number.");
+                sc.nextLine(); // Clear the bad input
+                continue;
+            }
+
+            switch (choice) {
+                case 1:
+                    System.out.print("Enter Patient Name: ");
+                    String pName = sc.nextLine();
+                    
+                    int age = -1;
+                    while (age < 0) {
+                        System.out.print("Enter Patient Age: ");
+                        try {
+                            age = sc.nextInt();
+                            sc.nextLine();
+                            if (age < 0) System.out.println("Age cannot be negative.");
+                        } catch (InputMismatchException e) {
+                            System.out.println("Invalid input. Please enter a valid age number.");
+                            sc.nextLine();
+                        }
+                    }
+
+                    patient = new Patient(pName, age);
+                    System.out.println("\n>>> Success: Patient successfully registered!");
+                    patient.showInfo();
+                    break;
+
+                case 2:
+                    System.out.print("Enter Doctor Name: ");
+                    String dName = sc.nextLine();
+                    System.out.print("Enter Doctor Specialization: ");
+                    String spec = sc.nextLine();
+
+                    doctor = new Doctor(dName, spec);
+                    System.out.println("\n>>> Success: Doctor assigned successfully!");
+                    doctor.showInfo();
+                    break;
+
+                case 3:
+                    // Business rule validation guard
+                    if (patient == null || doctor == null) {
+                        System.out.println("Warning: You must register a Patient AND a Doctor before booking an appointment.");
+                        break;
+                    }
+
+                    System.out.print("Enter Appointment Date & Time (e.g., 2026-07-15 10:00): ");
+                    String time = sc.nextLine();
+                    
+                    double fee = -1;
+                    while (fee < 0) {
+                        System.out.print("Enter Doctor Consultation Fee (LKR): ");
+                        try {
+                            fee = sc.nextDouble();
+                            sc.nextLine();
+                            if (fee < 0) System.out.println("Fee cannot be negative.");
+                        } catch (InputMismatchException e) {
+                            System.out.println("Invalid input. Please enter a valid fee amount.");
+                            sc.nextLine();
+                        }
+                    }
+
+                    appointment = new Appointment(time, fee);
+                    System.out.println("\n>>> Success: Appointment scheduled!");
+                    break;
+
+                case 4:
+                    if (patient == null || doctor == null || appointment == null) {
+                        System.out.println("Warning: Cannot print invoice. Missing Patient, Doctor, or Appointment details.");
+                        break;
+                    }
+
+                    System.out.println("\n========================================");
+                    System.out.println("        MEDICAL CLINIC FINAL BILL        ");
+                    System.out.println("========================================");
+                    System.out.printf(" Patient Name:    %s (Age: %d)%n", patient.getName(), patient.getAge());
+                    System.out.printf(" Assigned Doctor: Dr. %s (%s)%n", doctor.getName(), doctor.getSpecialization());
+                    System.out.printf(" Schedule:        %s%n", appointment.getDateTime());
+                    System.out.println("----------------------------------------");
+                    System.out.printf(" Consultation Fee:        LKR %.2f%n", appointment.getFee());
+                    System.out.printf(" Hospital Service Charge: LKR %.2f%n", appointment.getServiceCharge());
+                    System.out.println("----------------------------------------");
+                    System.out.printf(" TOTAL AMOUNT DUE:        LKR %.2f%n", appointment.getTotal());
+                    System.out.println("========================================");
+                    break;
+
+                case 5:
+                    if (appointment == null) {
+                        System.out.println("No active appointment to cancel.");
+                    } else {
+                        appointment = null;
+                        System.out.println("Success: Appointment and pending charges canceled.");
+                    }
+                    break;
+
+                case 6:
+                    System.out.println("Closing clinic system. Goodbye!");
+                    sc.close();
+                    return;
+
+                default:
+                    System.out.println("Invalid choice. Please select between 1 and 6.");
+            }
+        }
+    }
+}
